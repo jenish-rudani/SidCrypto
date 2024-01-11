@@ -1,10 +1,10 @@
-# Makefile for building 'sid.c' for multiple platforms
+# Makefile for building 'sidToMac.c' for multiple platforms
 
 # Default compiler settings
 CFLAGS := -Wall -Wextra -std=c99
 
 # Executable name
-EXE_NAME := sid
+EXE_NAME := sidToMac
 
 # Object file
 OBJ := $(EXE_NAME).o
@@ -43,8 +43,8 @@ $(BUILD_DIR_LINUX)/$(EXE_NAME) $(BUILD_DIR_DARWIN)/$(EXE_NAME) $(BUILD_DIR_WINDO
 	$(CC) $(CFLAGS) $(OBJ) -o $@
 
 # Compile the object file
-$(OBJ): sid.c
-	$(CC) $(CFLAGS) -c sid.c
+$(OBJ): sidToMac.c
+	$(CC) $(CFLAGS) -c sidToMac.c
 
 # Clean up
 clean:

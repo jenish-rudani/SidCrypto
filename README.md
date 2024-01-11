@@ -2,7 +2,7 @@
 
 ## Description
 
-Convert SID to MAC and viceversa.
+Convert SID to MAC.
 
 ## Supported Systems
 
