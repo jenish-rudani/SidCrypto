@@ -1,0 +1,12 @@
+# Compiled object files
+*.o
+
+# Compiled binaries
+/build/
+
+# Other common ignores
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo

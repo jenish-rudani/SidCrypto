@@ -1,5 +1,5 @@
 #include <stdint.h>
-#pragma clang optimize off
+#include <inttypes.h>
 
 typedef union uint64_union_s
 {
@@ -129,7 +129,7 @@ uint64_t Decrypt(uint8_t* inptr,uint8_t *outptr)
 int main(int argc, char *argv[])
 {
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s <input_in_hex>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input_SID_in_hex>\n", argv[0]);
         return 1;
     }
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     uint64_t output;
 
     // Parse the input from command line argument
-    if (sscanf(argv[1], "%lld", &input) != 1) {
+    if (sscanf(argv[1], "%" SCNu64, &input) != 1) {
         fprintf(stderr, "Invalid input format. Please enter a decimal number.\n");
         return 1;
     }
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
     Decrypt((uint8_t *)&input, (uint8_t *)&output);
 
     // Print the output, masking to ensure 56-bit output as per original code
-    printf("%012llX\n", output & 0x0000FFFFFFFFFFFFFF);
+    printf("%" PRIX64 "\n", output & 0x0000FFFFFFFFFFFFFF);
 
     return 0;
 }
