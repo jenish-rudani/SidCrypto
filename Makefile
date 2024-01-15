@@ -1,7 +1,7 @@
 # Makefile for building 'sidToMac.c' for multiple platforms
 
 # Default compiler settings
-CFLAGS := -Wall -Wextra -std=c99
+CFLAGS := -Wall -Wextra -std=c99 -O0
 
 # Executable name
 EXE_NAME := sidToMac
