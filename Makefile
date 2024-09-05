@@ -1,13 +1,15 @@
-# Makefile for building 'sidToMac.c' for multiple platforms
+# Makefile for building 'sidToMac.c' and 'macToSid.c' for multiple platforms
 
 # Default compiler settings
 CFLAGS := -Wall -Wextra -std=c99 -O0
 
-# Executable name
-EXE_NAME := sidToMac
+# Executable names
+EXE_NAME_SIDTOMAC := sidToMac
+EXE_NAME_MACTOSID := macToSid
 
-# Object file
-OBJ := $(EXE_NAME).o
+# Object files
+OBJ_SIDTOMAC := $(EXE_NAME_SIDTOMAC).o
+OBJ_MACTOSID := $(EXE_NAME_MACTOSID).o
 
 # Compilers for specific platforms
 CC_LINUX := x86_64-linux-gnu-gcc
@@ -22,35 +24,39 @@ BUILD_DIR_WINDOWS := build/windows
 # Phony targets for each platform
 .PHONY: compile-linux compile-darwin compile-windows clean
 
-compile-linux: clean
-	$(MAKE) CC=$(CC_LINUX) BUILD_DIR=$(BUILD_DIR_LINUX) EXE=$(BUILD_DIR_LINUX)/$(EXE_NAME) $(BUILD_DIR_LINUX)/$(EXE_NAME)
-	rm -f $(OBJ)
+# Linux
+compile-linux: $(BUILD_DIR_LINUX)/$(EXE_NAME_SIDTOMAC) $(BUILD_DIR_LINUX)/$(EXE_NAME_MACTOSID)
 
-compile-darwin: clean
-	$(MAKE) CC=$(CC_DARWIN) BUILD_DIR=$(BUILD_DIR_DARWIN) EXE=$(BUILD_DIR_DARWIN)/$(EXE_NAME) $(BUILD_DIR_DARWIN)/$(EXE_NAME)
-	rm -f $(OBJ)
+# Darwin
+compile-darwin: $(BUILD_DIR_DARWIN)/$(EXE_NAME_SIDTOMAC) $(BUILD_DIR_DARWIN)/$(EXE_NAME_MACTOSID)
 
-compile-windows: clean
-	$(MAKE) CC=$(CC_WINDOWS) BUILD_DIR=$(BUILD_DIR_WINDOWS) EXE=$(BUILD_DIR_WINDOWS)/$(EXE_NAME).exe $(BUILD_DIR_WINDOWS)/$(EXE_NAME).exe
-	rm -f $(OBJ)
+# Windows
+compile-windows: $(BUILD_DIR_WINDOWS)/$(EXE_NAME_SIDTOMAC).exe $(BUILD_DIR_WINDOWS)/$(EXE_NAME_MACTOSID).exe
+
+# Compile sidToMac for all platforms
+$(BUILD_DIR_LINUX)/$(EXE_NAME_SIDTOMAC) $(BUILD_DIR_DARWIN)/$(EXE_NAME_SIDTOMAC) $(BUILD_DIR_WINDOWS)/$(EXE_NAME_SIDTOMAC).exe: $(OBJ_SIDTOMAC) | $(BUILD_DIR_LINUX) $(BUILD_DIR_DARWIN) $(BUILD_DIR_WINDOWS)
+	$(CC) $(CFLAGS) $(OBJ_SIDTOMAC) -o $@
+
+# Compile macToSid for all platforms
+$(BUILD_DIR_LINUX)/$(EXE_NAME_MACTOSID) $(BUILD_DIR_DARWIN)/$(EXE_NAME_MACTOSID) $(BUILD_DIR_WINDOWS)/$(EXE_NAME_MACTOSID).exe: $(OBJ_MACTOSID) | $(BUILD_DIR_LINUX) $(BUILD_DIR_DARWIN) $(BUILD_DIR_WINDOWS)
+	$(CC) $(CFLAGS) $(OBJ_MACTOSID) -o $@
 
 # Ensure build directory exists
 $(BUILD_DIR_LINUX) $(BUILD_DIR_DARWIN) $(BUILD_DIR_WINDOWS):
 	mkdir -p $@
 
-# Compile the program
-$(BUILD_DIR_LINUX)/$(EXE_NAME) $(BUILD_DIR_DARWIN)/$(EXE_NAME) $(BUILD_DIR_WINDOWS)/$(EXE_NAME).exe: $(OBJ) | $(BUILD_DIR_LINUX) $(BUILD_DIR_DARWIN) $(BUILD_DIR_WINDOWS)
-	$(CC) $(CFLAGS) $(OBJ) -o $@
-
-# Compile the object file
-$(OBJ): sidToMac.c
+# Compile the object files
+$(OBJ_SIDTOMAC): sidToMac.c
 	$(CC) $(CFLAGS) -c sidToMac.c
+
+$(OBJ_MACTOSID): macToSid.c
+	$(CC) $(CFLAGS) -c macToSid.c -o $(OBJ_MACTOSID)
 
 # Clean up
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ_SIDTOMAC) $(OBJ_MACTOSID)
 	rm -rf build
 
 # Default target
 all: compile-darwin compile-windows compile-linux
-	@echo "Comping All Platforms"
+	@echo "Compiling All Platforms"

@@ -38,6 +38,14 @@ const Rc5_64_t Rc5_64 =
         0x7b51148a, 0x0d00fec6, 0x7b29e89f, 0xe766276a}
 };
 
+#define U32V(v) (v & 0xFFFFFFFF)
+
+#define ROTL32(v, n) \
+   (U32V((v) << (n)) | ((v) >> (32 - (n))))
+#define ROTATELEFT(v,c) (ROTL32(v,c))
+#define ROTR32(v, n) ROTL32(v, 32 - (n))
+#define ROTATERIGHT(v,c) (ROTR32(v,c))
+
 uint32_t rotL(const Rc5_64_t*c, uint32_t x,uint32_t n)
 {
     uint32_t nn = n % c->bits;
@@ -47,9 +55,12 @@ uint32_t rotL(const Rc5_64_t*c, uint32_t x,uint32_t n)
     {
         return x;
     }
-    out = (xx << n) | ((xx >>(c->bits - n)) & c->msk);
+    uint32_t l1 = (c->bits - n);
+    uint32_t l2 =  ROTATERIGHT(xx,l1) & c->msk;
+    uint32_t l3 = ROTATELEFT(xx, n);
+    out = l3 | l2;
+    // out = (xx << n) | ((xx >>(c->bits - n)) & c->msk);
     return out;
-    
 }
 
 
@@ -125,27 +136,73 @@ uint64_t Decrypt(uint8_t* inptr,uint8_t *outptr)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <input_SID_in_decimal>\n", argv[0]);
+    uint64_t output = 0;
+    uint8_t seed_value = 0xFF;
+    int opt;
+    int mac_flag = 0;
+    uint8_t mfgMac[6] = {0};
+    char mac_str[13] = {0};  // 12 hex digits + null terminator
+
+    while ((opt = getopt(argc, argv, "s:m:")) != -1) {
+        switch (opt) {
+            case 's':
+                seed_value = (uint8_t)strtol(optarg, NULL, 16);
+                break;
+            case 'm':
+                if (strlen(optarg) != 12) {
+                    fprintf(stderr, "Invalid MAC format. Please enter 12 hexadecimal digits.\n");
+                    return 1;
+                }
+                strncpy(mac_str, optarg, 12);
+                mac_flag = 1;
+                break;
+            default:
+                fprintf(stderr, "Usage: %s -s <seed_in_hex> -m <input_mac_12_hex_digits>\n", argv[0]);
+                return 1;
+        }
+    }
+
+    if (!mac_flag) {
+        fprintf(stderr, "MAC address is required. Use -m flag to specify the MAC.\n");
         return 1;
     }
 
-    uint64_t input;
-    uint64_t output;
-
-    // Parse the input from command line argument
-    if (sscanf(argv[1], "%" SCNu64, &input) != 1) {
-        fprintf(stderr, "Invalid input format. Please enter a decimal number.\n");
-        return 1;
+    // Convert MAC string to bytes
+    for (int i = 0; i < 6; i++) {
+        sscanf(mac_str + (i * 2), "%2hhx", &mfgMac[i]);
     }
 
-    Decrypt((uint8_t *)&input, (uint8_t *)&output);
+    // uint8_t mfgMac[6] = {0x38,0x00,0xC8,0x02,0xED,0x08};
+      uint8_t beaconid[8];
+    for (uint8_t i = 0; i < sizeof(mfgMac); i++) { beaconid[i] = mfgMac[i]; }
+    beaconid[6] = 0x00;  // bits[55:48] Reserved
+   beaconid[7] = 0xFC;  // bits[63:56] GUARD ID
 
-    // Print the output, masking to ensure 56-bit output as per original code
-    printf("%" PRIX64 "\n", output );
+    // uint64_t seed = (uint64_t)((uint64_t)0xFC << 56 | 
+    //                            (uint64_t)mfgMac[0] << 56 | 
+    //                            (uint64_t)mfgMac[1] << 32 | 
+    //                            (uint64_t)mfgMac[2] << 24 | 
+    //                            (uint64_t)mfgMac[3] << 16 | 
+    //                            (uint64_t)mfgMac[4] << 8  | 
+    //                            (uint64_t)mfgMac[5]);
+
+    // printf("Seed: 0x%" PRIX64 "\n", (uint8_t *)&beaconid);
+    printf("BeaconID: ");
+       for (uint8_t i = 0; i < 8; i++) {
+           printf("%02X", beaconid[i]);
+       }
+    printf("\n");
+    Encrypt((uint8_t *)&beaconid, (uint8_t *)&output);
+
+    // Print the output
+    printf("Output Decimal: %" PRIu64 "\n", output);
+    printf("Output Hex: %" PRIX64 "\n", output);
 
     return 0;
 }
