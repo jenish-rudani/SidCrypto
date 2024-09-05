@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
       uint8_t beaconid[8];
     for (uint8_t i = 0; i < sizeof(mfgMac); i++) { beaconid[i] = mfgMac[i]; }
     beaconid[6] = 0x00;  // bits[55:48] Reserved
-   beaconid[7] = 0xFC;  // bits[63:56] GUARD ID
+    beaconid[7] = seed_value;  // bits[63:56] GUARD ID
 
     // uint64_t seed = (uint64_t)((uint64_t)0xFC << 56 | 
     //                            (uint64_t)mfgMac[0] << 56 | 
